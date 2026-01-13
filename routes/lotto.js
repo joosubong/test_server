@@ -236,6 +236,108 @@ router.get('/random', (req, res) => {
 });
 
 
+router.get('/random2', (req, res) => {
+
+  readLottoCSV((results) => {
+
+    // 1. 번호별 출현 횟수 계산
+    const counts = Array(46).fill(0);
+
+    results.forEach(row => {
+      const numbers = extractNumbers(row);
+      numbers.forEach(num => {
+        if (num >= 1 && num <= 45) counts[num]++;
+      });
+    });
+
+    // 2. 하위 15개 번호 구하기
+    const sorted = [];
+    for (let i = 1; i <= 45; i++) {
+      sorted.push({ num: i, count: counts[i] });
+    }
+    sorted.sort((a, b) => a.count - b.count);
+
+    const excluded = new Set(sorted.slice(0, 15).map(v => v.num));
+
+    // 3. 남은 번호
+    const available = [];
+    for (let i = 1; i <= 45; i++) {
+      if (!excluded.has(i)) available.push(i);
+    }
+
+    // 4. 랜덤 3줄
+    const finalResult = [];
+
+    for (let t = 0; t < 3; t++) {
+      const pool = [...available];
+      const selected = [];
+
+      while (selected.length < 6) {
+        const idx = Math.floor(Math.random() * pool.length);
+        selected.push(pool[idx]);
+        pool.splice(idx, 1);
+      }
+
+      finalResult.push(selected.sort((a, b) => a - b));
+    }
+
+    res.json(finalResult);
+  });
+});
+
+
+
+
+
+router.get('/random8', (req, res) => {
+
+  readLottoCSV((results) => {
+
+    // 1. 최근 8주 데이터
+    const recent8 = results.slice(-8);
+    const appeared = new Set();
+
+    recent8.forEach(row => {
+      const numbers = extractNumbers(row);
+      numbers.forEach(num => {
+        if (num >= 1 && num <= 45) appeared.add(num);
+      });
+    });
+
+    // 2. 8주간 안 나온 번호
+    const missing8 = [];
+    for (let i = 1; i <= 45; i++) {
+      if (!appeared.has(i)) missing8.push(i);
+    }
+
+    const missingSet = new Set(missing8);
+
+    // 3. 남은 번호
+    const available = [];
+    for (let i = 1; i <= 45; i++) {
+      if (!missingSet.has(i)) available.push(i);
+    }
+
+    // 4. 랜덤 3줄
+    const finalResult = [];
+
+    for (let t = 0; t < 3; t++) {
+      const pool = [...available];
+      const selected = [];
+
+      while (selected.length < 6) {
+        const idx = Math.floor(Math.random() * pool.length);
+        selected.push(pool[idx]);
+        pool.splice(idx, 1);
+      }
+
+      finalResult.push(selected.sort((a, b) => a - b));
+    }
+
+    res.json(finalResult);
+  });
+});
+
 
 
 
